@@ -1,0 +1,111 @@
+<!doctype html>
+
+<div id="grid"></div>
+<button id="next">Next generation</button>
+
+<script>
+//define gridMatrix
+function generateGridMatrix(width, height) {
+    let gridMatrix = []
+    for(let y = 0; y < height; y++) {
+        for(let x = 0; x < width; x++) {
+            let live = (Math.random() > .5 ? true : false)
+            let cell = {x ,y, live}
+            gridMatrix.push(cell)
+        }
+    }
+    return gridMatrix
+}
+
+function buildNodeGrid(width, height, gridMatrix){
+    let checkboxWrapper = document.createElement('div')
+    let index = 0
+    for(let cell of gridMatrix) {
+        let checkbox = document.createElement('input')
+        checkbox.setAttribute('type', 'checkbox')
+        checkbox.setAttribute('data-index', index)
+        index++
+        if (cell.live) checkbox.setAttribute('checked','')
+        checkbox.addEventListener('click', (e) => {
+            gridMatrix[e.target.getAttribute('data-index')].live = e.target.checked
+        })
+        checkboxWrapper.appendChild(checkbox)
+        if(cell.x === width - 1) { checkboxWrapper.appendChild(document.createElement('br'))}
+    }
+    return checkboxWrapper
+}
+
+function nextGen(gridMatrix, width, height){
+    setNeighbors(gridMatrix, width, height)
+    for (let cell of gridMatrix){
+        cell.live = liveOrDie(cell.live, cell.liveNeighbors)
+    }
+    grid.replaceChild(buildNodeGrid(width, height, gridMatrix), grid.firstChild)
+}
+
+function liveOrDie(isLive, liveNeighbors){
+    if (isLive) {
+        if(liveNeighbors === 2 || liveNeighbors === 3) { 
+            return true 
+        } else return false
+    } else if (!isLive && liveNeighbors === 3) {
+        return true
+    } else return false
+}
+
+
+function setNeighbors(gridMatrix, width, height) {
+
+    for (let i=0; i < gridMatrix.length; i++) {
+        gridMatrix[i].liveNeighbors = getLiveNeighbors(i,gridMatrix[i].x, gridMatrix[i].y)
+    }
+
+    function getLiveNeighbors (cellIndex, x, y){ 
+        let liveNeighbors = 0
+        //not on left edge
+        if(x != 0) {
+            if(gridMatrix[cellIndex - 1].live) liveNeighbors++
+            //also not on top edge 
+            if (y != 0) {
+                if(gridMatrix[cellIndex - height - 1].live) liveNeighbors++
+            }
+            //also not on bottom edge 
+            if (y != height - 1) {
+                if(gridMatrix[cellIndex + height - 1].live) liveNeighbors++
+            }
+        }
+        //not on right edge
+        if(x != width - 1) { 
+            if(gridMatrix[cellIndex + 1].live) liveNeighbors++
+            //also not on top edge
+            if(y != 0) {
+                if(gridMatrix[cellIndex - height + 1].live) liveNeighbors++
+            }
+            //also not on bottom edge
+            if(y != height - 1) {
+                if(gridMatrix[cellIndex + height + 1].live) liveNeighbors++
+            }
+        }
+        //not on top edge
+        if(y != 0) {
+            if(gridMatrix[cellIndex - height].live) liveNeighbors++
+        }
+        //not on bottom edge
+        if(y != height - 1) {
+            if(gridMatrix[cellIndex + height].live) liveNeighbors++
+        }
+        return liveNeighbors
+    }
+
+}
+
+function initLife(width, height, parent){
+    let gridMatrix = generateGridMatrix(width, height)
+    parent.appendChild(buildNodeGrid(width, height, gridMatrix))
+    let nextGenButton = document.querySelector('#next')
+    nextGenButton.addEventListener('click', () => { nextGen(gridMatrix, width, height)})
+}
+
+let grid = document.querySelector('#grid')
+initLife(25,25, grid)
+</script>
